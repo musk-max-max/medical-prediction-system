@@ -14,9 +14,9 @@ export const comparePassword = async (password: string, hashedPassword: string):
   return await bcrypt.compare(password, hashedPassword);
 };
 
-export const generateToken = (userId: number, username: string, isAdmin: boolean = false): string => {
+export const generateToken = (id: number, username: string, is_admin: boolean = false): string => {
   return jwt.sign(
-    { userId, username, isAdmin },
+    { id, username, is_admin },
     JWT_SECRET,
     { expiresIn: '24h' }
   );

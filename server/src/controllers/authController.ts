@@ -57,7 +57,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     });
 
     // 生成token
-    const token = generateToken(userId, username);
+    const token = generateToken(userId, username, false);
     const response: AuthResponse = {
       token,
       user: {
