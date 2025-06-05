@@ -1,0 +1,20 @@
+[
+  "SEX",
+  "AGE",
+  "TOTCHOL",
+  "SYSBP",
+  "DIABP",
+  "CURSMOKE",
+  "CIGPDAY",
+  "BMI",
+  "DIABETES",
+  "BPMEDS",
+  "HEARTRTE",
+  "GLUCOSE",
+  "PULSE_PRESSURE",
+  "CHOL_AGE_RATIO",
+  "AGE_GROUP",
+  "HYPERTENSION_STAGE",
+  "SMOKING_RISK",
+  "BMI_CATEGORY"
+]

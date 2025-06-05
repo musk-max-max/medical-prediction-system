@@ -1,0 +1,29 @@
+{
+  "best_model": "Logistic_Regression",
+  "auc_score": 0.769844373345973,
+  "feature_names": [
+    "SEX",
+    "AGE",
+    "TOTCHOL",
+    "SYSBP",
+    "DIABP",
+    "CURSMOKE",
+    "CIGPDAY",
+    "BMI",
+    "DIABETES",
+    "BPMEDS",
+    "HEARTRTE",
+    "GLUCOSE",
+    "PREVCHD",
+    "PREVAP",
+    "PREVMI",
+    "PREVSTRK",
+    "PREVHYP",
+    "PULSE_PRESSURE",
+    "CHOL_AGE_RATIO",
+    "BMI_CATEGORY",
+    "AGE_GROUP",
+    "SMOKING_RISK"
+  ],
+  "target_column": "CVD"
+}

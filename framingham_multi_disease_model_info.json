@@ -1,0 +1,113 @@
+{
+  "study_name": "弗雷明汉心脏研究多疾病预测系统",
+  "study_period": "24年随访 (8766天)",
+  "total_patients": 4434,
+  "total_features": 18,
+  "features": [
+    "SEX",
+    "AGE",
+    "TOTCHOL",
+    "SYSBP",
+    "DIABP",
+    "CURSMOKE",
+    "CIGPDAY",
+    "BMI",
+    "DIABETES",
+    "BPMEDS",
+    "HEARTRTE",
+    "GLUCOSE",
+    "PULSE_PRESSURE",
+    "CHOL_AGE_RATIO",
+    "AGE_GROUP",
+    "HYPERTENSION_STAGE",
+    "SMOKING_RISK",
+    "BMI_CATEGORY"
+  ],
+  "diseases": {
+    "CVD": {
+      "name": "心血管疾病 (心肌梗死或卒中)",
+      "description": "包括心肌梗死、致命性冠心病、动脉血栓性梗死、脑栓塞、脑内出血等",
+      "event_rate": 0.2493334480089447,
+      "total_events": 2899,
+      "avg_time_to_event_years": 11.780815164614577,
+      "model_performance": {
+        "auc": 0.7181197867173478,
+        "accuracy": 0.7508455467869222,
+        "model_type": "LogisticRegression"
+      }
+    },
+    "CHD": {
+      "name": "冠心病 (任何形式)",
+      "description": "包括心绞痛、心肌梗死、冠状动脉功能不全、致命性冠心病",
+      "event_rate": 0.2716091855164703,
+      "total_events": 3158,
+      "avg_time_to_event_years": 11.43960841277912,
+      "model_performance": {
+        "auc": 0.7249230147912564,
+        "accuracy": 0.7282976324689966,
+        "model_type": "LogisticRegression"
+      }
+    },
+    "STROKE": {
+      "name": "卒中",
+      "description": "包括动脉血栓性梗死、脑栓塞、脑内出血、蛛网膜下腔出血",
+      "event_rate": 0.09125311774318397,
+      "total_events": 1061,
+      "avg_time_to_event_years": 13.952864324784967,
+      "model_performance": {
+        "auc": 0.7434963735539172,
+        "accuracy": 0.9041713641488163,
+        "model_type": "LogisticRegression"
+      }
+    },
+    "ANGINA": {
+      "name": "心绞痛",
+      "description": "胸痛或胸部不适，通常由心肌缺血引起",
+      "event_rate": 0.16358475961124969,
+      "total_events": 1902,
+      "avg_time_to_event_years": 10.5375673576789,
+      "model_performance": {
+        "auc": 0.6561018682033646,
+        "accuracy": 0.8331454340473506,
+        "model_type": "LogisticRegression"
+      }
+    },
+    "MI": {
+      "name": "心肌梗死",
+      "description": "住院心肌梗死或致命性冠心病",
+      "event_rate": 0.15377999483959748,
+      "total_events": 1788,
+      "avg_time_to_event_years": 12.820421181900173,
+      "model_performance": {
+        "auc": 0.7492096944151738,
+        "accuracy": 0.8297632468996617,
+        "model_type": "LogisticRegression"
+      }
+    },
+    "HYPERTENSION": {
+      "name": "高血压",
+      "description": "收缩压≥140mmHg或舒张压≥90mmHg或正在服用降压药",
+      "event_rate": 0.7432699750580545,
+      "total_events": 8642,
+      "avg_time_to_event_years": 5.794502153578476,
+      "model_performance": {
+        "auc": 0.8463706422973782,
+        "accuracy": 0.7925591882750845,
+        "model_type": "LogisticRegression"
+      }
+    },
+    "DEATH": {
+      "name": "死亡风险",
+      "description": "任何原因导致的死亡",
+      "event_rate": 0.303345660961555,
+      "total_events": 3527,
+      "avg_time_to_event_years": 15.769659575384727,
+      "model_performance": {
+        "auc": 0.787488119863588,
+        "accuracy": 0.7508455467869222,
+        "model_type": "LogisticRegression"
+      }
+    }
+  },
+  "created_date": "2025-06-04T14:03:12.214199"
+}

@@ -1,0 +1,47 @@
+医疗预测系统数据摘要
+==============================
+
+数据形状: (11627, 39)
+特征数量: 39
+样本数量: 11627
+
+列名:
+- RANDID
+- SEX
+- TOTCHOL
+- AGE
+- SYSBP
+- DIABP
+- CURSMOKE
+- CIGPDAY
+- BMI
+- DIABETES
+- BPMEDS
+- HEARTRTE
+- GLUCOSE
+- educ
+- PREVCHD
+- PREVAP
+- PREVMI
+- PREVSTRK
+- PREVHYP
+- TIME
+- PERIOD
+- HDLC
+- LDLC
+- DEATH
+- ANGINA
+- HOSPMI
+- MI_FCHD
+- ANYCHD
+- STROKE
+- CVD
+- HYPERTEN
+- TIMEAP
+- TIMEMI
+- TIMEMIFC
+- TIMECHD
+- TIMESTRK
+- TIMECVD
+- TIMEDTH
+- TIMEHYP
