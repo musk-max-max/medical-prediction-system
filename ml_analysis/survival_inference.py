@@ -44,7 +44,7 @@ class FraminghamPredictor:
             'death': '死亡风险'
         }
 
-    def load_models(self, model_dir='./ml_analysis'):
+    def load_models(self, model_dir='.'):
         """加载所有预训练模型"""
         log_message("Loading pretrained models...")
         

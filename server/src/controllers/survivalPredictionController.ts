@@ -67,6 +67,7 @@ export const predictSurvivalTimes = async (req: Request, res: Response) => {
     console.log('📝 输入数据:', inputData);
 
     const pythonProcess = spawn('python3', [pythonScript, inputData], {
+      cwd: path.resolve(__dirname, '../../../ml_analysis'),
       stdio: ['pipe', 'pipe', 'pipe']
     });
 
