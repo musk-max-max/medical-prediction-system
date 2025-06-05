@@ -1,7 +1,7 @@
 import { Response } from 'express';
 import { body, validationResult } from 'express-validator';
 import { database } from '../config/database';
-import { AuthRequest } from '../utils/auth';
+import { AuthRequest } from '../types';
 import { HealthData } from '../types';
 
 export const predictionValidation = [

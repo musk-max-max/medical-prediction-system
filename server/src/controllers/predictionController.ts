@@ -2,7 +2,7 @@ import { Response } from 'express';
 import { body, validationResult } from 'express-validator';
 import { spawn } from 'child_process';
 import { database } from '../config/database';
-import { AuthRequest } from '../utils/auth';
+import { AuthRequest } from '../types';
 import { HealthData, PredictionResult } from '../types';
 import path from 'path';
 import fs from 'fs';
