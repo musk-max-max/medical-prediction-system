@@ -186,9 +186,9 @@ function callPythonPredictor(healthData: HealthData): Promise<any> {
           // 忽略清理错误
         }
         
-        reject(new Error('Python脚本执行超时 (15秒)'));
+        reject(new Error('Python脚本执行超时 (3分钟)'));
       }
-    }, 15000); // 15秒超时
+    }, 180000); // 3分钟超时
 
     // 使用虚拟环境中的Python
     const pythonExecutable = path.resolve(__dirname, '../../../.venv/bin/python');
