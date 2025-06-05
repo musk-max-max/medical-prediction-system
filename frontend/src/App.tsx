@@ -12,12 +12,20 @@ function App() {
     const checkHealth = async () => {
       try {
         setLoading(true);
+        console.log('开始健康检查，API URL:', apiService);
         const response = await apiService.healthCheck();
+        console.log('健康检查响应:', response);
         setHealthStatus(response);
         setError(null);
-      } catch (err) {
-        setError('无法连接到后端服务器');
+      } catch (err: any) {
+        const errorMessage = `无法连接到后端服务器: ${err.message}`;
+        setError(errorMessage);
         console.error('健康检查失败:', err);
+        console.error('错误详情:', {
+          message: err.message,
+          stack: err.stack,
+          status: err.status
+        });
       } finally {
         setLoading(false);
       }

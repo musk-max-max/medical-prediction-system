@@ -44,6 +44,7 @@ class ApiService {
 
   // 健康检查
   async healthCheck() {
+    console.log('发送健康检查请求到:', `${this.baseURL}/health`);
     return this.request('/health');
   }
 
