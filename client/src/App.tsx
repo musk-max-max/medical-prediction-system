@@ -99,7 +99,7 @@ interface SurvivalPredictionResponse {
 }
 
 // API配置
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://medical-prediction-api.onrender.com';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://medical-prediction-api.onrender.com/api';
 axios.defaults.baseURL = API_BASE_URL;
 axios.defaults.timeout = 60000; // 增加到60秒超时，用于AI预测
 axios.defaults.headers.common['Content-Type'] = 'application/json';
@@ -217,7 +217,7 @@ const App: React.FC = () => {
     const testAPIConnection = async () => {
       try {
         console.log('测试API连接...');
-        const response = await axios.get('/api/health');
+        const response = await axios.get('/health');
         console.log('API连接成功:', response.data);
       } catch (error: any) {
         console.error('API连接失败:', error);
@@ -243,7 +243,7 @@ const App: React.FC = () => {
     
     try {
       console.log('手动测试API连接...');
-      const response = await axios.get('/api/health');
+      const response = await axios.get('/health');
       console.log('API连接成功:', response.data);
       setSuccess('API连接测试成功！');
     } catch (error: any) {
@@ -274,7 +274,7 @@ const App: React.FC = () => {
     clearMessages();
 
     try {
-      const response = await axios.post('/api/auth/login', { username: authForm.username, password: authForm.password });
+      const response = await axios.post('/auth/login', { username: authForm.username, password: authForm.password });
       const authData: AuthData = response.data;
       
       console.log('Login response:', authData);
@@ -304,7 +304,7 @@ const App: React.FC = () => {
     clearMessages();
 
     try {
-      const response = await axios.post('/api/auth/register', {
+      const response = await axios.post('/auth/register', {
         username: authForm.username,
         email: authForm.email,
         password: authForm.password
@@ -386,12 +386,12 @@ const App: React.FC = () => {
     try {
       // 分别发起两个请求，避免其中一个失败影响另一个
       console.log('发起风险评估请求...');
-      const riskPromise = axios.post('/api/predict', healthForm, {
+      const riskPromise = axios.post('/predict', healthForm, {
         timeout: 60000 // 60秒超时
       });
 
       console.log('发起生存分析请求...');
-      const survivalPromise = axios.post('/api/survival/predict', healthForm, {
+      const survivalPromise = axios.post('/survival/predict', healthForm, {
         timeout: 60000 // 60秒超时
       });
 
@@ -439,7 +439,7 @@ const App: React.FC = () => {
   const fetchHistory = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('/api/predict/history', {
+      const response = await axios.get('/predict/history', {
         params: {
           search: searchQuery,
           is_admin: isAdmin
@@ -546,7 +546,7 @@ const App: React.FC = () => {
 
     setLoading(true);
     try {
-      await axios.delete('/api/predict/history', {
+      await axios.delete('/predict/history', {
         data: { ids: selectedRecords }
       });
       setSuccess(language === 'en' ? 
