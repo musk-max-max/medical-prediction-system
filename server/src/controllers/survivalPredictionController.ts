@@ -84,7 +84,8 @@ export const predictSurvivalTimes = async (req: Request, res: Response) => {
     // 设置超时
     const timeout = setTimeout(() => {
       pythonProcess.kill('SIGTERM');
-    }, 120000); // 2分钟超时
+      console.error('❌ Python脚本执行超时 (3分钟)');
+    }, 180000); // 3分钟超时
 
     pythonProcess.on('close', async (code) => {
       clearTimeout(timeout);
@@ -102,8 +103,22 @@ export const predictSurvivalTimes = async (req: Request, res: Response) => {
       }
 
       try {
+        console.log('📊 Python脚本原始输出:', stdout);
+        console.log('🔍 stderr内容:', stderr);
+        
+        // 清理stdout，移除可能的空白字符
+        const cleanedOutput = stdout.trim();
+        
+        if (!cleanedOutput) {
+          return res.status(500).json({
+            success: false,
+            message: '生存分析预测失败 - 空输出',
+            error: 'Python脚本没有返回任何数据'
+          });
+        }
+
         // 解析Python脚本输出
-        const result: SurvivalPredictionResponse = JSON.parse(stdout);
+        const result: SurvivalPredictionResponse = JSON.parse(cleanedOutput);
         
         if (!result.success) {
           return res.status(500).json({
@@ -129,12 +144,13 @@ export const predictSurvivalTimes = async (req: Request, res: Response) => {
 
       } catch (parseError) {
         console.error('❌ 解析预测结果失败:', parseError);
-        console.error('Python输出:', stdout);
+        console.error('Python stdout:', stdout);
+        console.error('Python stderr:', stderr);
         
         res.status(500).json({
           success: false,
-          message: '解析生存分析结果失败',
-          error: String(parseError)
+          message: '解析生存分析结果失败 - JSON格式错误',
+          error: `解析错误: ${String(parseError)}. 输出: ${stdout.slice(0, 200)}...`
         });
       }
     });
