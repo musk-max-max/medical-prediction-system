@@ -110,11 +110,11 @@ venv/
 *.sqlite
 *.db
 
-# Machine Learning Models (large files)
-*.pkl
-*.joblib
-models/*.pkl
-models/*.joblib
+# Machine Learning Models (large files) - temporarily allow for deployment
+# *.pkl
+# *.joblib
+# models/*.pkl
+# models/*.joblib
 
 # Temporary files
 temp_*.json
