@@ -190,8 +190,8 @@ function callPythonPredictor(healthData: HealthData): Promise<any> {
       }
     }, 180000); // 3分钟超时
 
-    // 使用虚拟环境中的Python
-    const pythonExecutable = path.resolve(__dirname, '../../../.venv/bin/python');
+    // 使用系统Python3（云端兼容）
+    const pythonExecutable = 'python3';
     const pythonProcess = spawn(pythonExecutable, [pythonScript, tempInputFile], {
       cwd: path.resolve(__dirname, '../../../ml_analysis'),
       stdio: ['pipe', 'pipe', 'pipe'],
