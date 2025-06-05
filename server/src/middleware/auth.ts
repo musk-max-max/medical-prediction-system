@@ -4,7 +4,7 @@ import { AuthRequest } from '../types';
 
 export const auth = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const token = req.header('Authorization')?.replace('Bearer ', '');
+    const token = req.get('Authorization')?.replace('Bearer ', '');
 
     if (!token) {
       throw new Error();
