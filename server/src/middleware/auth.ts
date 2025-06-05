@@ -41,4 +41,7 @@ export const adminAuth = async (req: AuthRequest, res: Response, next: NextFunct
   } catch (error) {
     res.status(401).json({ error: '请先登录' });
   }
-}; 
+};
+
+// 别名导出，兼容其他文件的导入
+export const authenticateToken = auth; 
