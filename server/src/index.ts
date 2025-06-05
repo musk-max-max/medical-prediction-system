@@ -132,7 +132,7 @@ process.on('SIGINT', () => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 医疗预测系统后端服务启动成功`);
+  console.log('🚀 医疗预测系统后端服务启动成功');
   console.log(`📡 服务器运行在: http://localhost:${PORT}`);
   console.log(`🏥 API地址: http://localhost:${PORT}/api`);
   console.log(`💊 健康检查: http://localhost:${PORT}/api/health`);

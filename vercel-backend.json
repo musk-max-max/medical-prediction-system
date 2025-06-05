@@ -1,0 +1,33 @@
+{
+  "version": 2,
+  "name": "medical-prediction-api",
+  "builds": [
+    {
+      "src": "server/src/index.ts",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "requirements.txt",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "server/src/index.ts"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  },
+  "functions": {
+    "server/src/index.ts": {
+      "includeFiles": [
+        "ml_analysis/**",
+        "*.pkl",
+        "*.json",
+        "requirements.txt"
+      ]
+    }
+  }
+} 
