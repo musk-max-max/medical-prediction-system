@@ -3,6 +3,9 @@ import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
 import { AuthRequest } from '../types';
 
+// 重新导出AuthRequest类型
+export { AuthRequest } from '../types';
+
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_key';
 
 export const hashPassword = async (password: string): Promise<string> => {
