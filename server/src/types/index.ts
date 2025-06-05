@@ -61,4 +61,13 @@ import { Request } from 'express';
 
 export interface AuthRequest extends Request {
   user?: User;
+}
+
+// 声明合并扩展Express Request
+declare global {
+  namespace Express {
+    interface Request {
+      user?: User;
+    }
+  }
 } 
