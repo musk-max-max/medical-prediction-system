@@ -1,13 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-
-interface AuthRequest extends Request {
-  user?: {
-    id: number;
-    username: string;
-    is_admin: boolean;
-  };
-}
+import { AuthRequest } from '../types';
 
 export const auth = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
@@ -17,13 +10,16 @@ export const auth = async (req: AuthRequest, res: Response, next: NextFunction) 
       throw new Error();
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as {
-      id: number;
-      username: string;
-      is_admin: boolean;
-    };
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as any;
 
-    req.user = decoded;
+    req.user = {
+      id: decoded.id,
+      username: decoded.username,
+      email: decoded.email || '',
+      is_admin: decoded.is_admin || false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
     next();
   } catch (error) {
     res.status(401).json({ error: '请先登录' });

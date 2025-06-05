@@ -1,14 +1,7 @@
 import { Request, Response } from 'express';
 import { Op } from 'sequelize';
 import { User } from '../models/user';
-
-interface AuthRequest extends Request {
-  user?: {
-    id: number;
-    username: string;
-    is_admin: boolean;
-  };
-}
+import { AuthRequest } from '../types';
 
 // 获取历史记录
 export const getHistory = async (req: AuthRequest, res: Response) => {
