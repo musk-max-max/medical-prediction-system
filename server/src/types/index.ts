@@ -59,8 +59,25 @@ export interface PredictionRequest extends HealthData {
 // Express扩展接口
 import { Request } from 'express';
 
-export interface AuthRequest extends Request {
+export interface AuthRequest {
   user?: User;
+  body: any;
+  query: any;
+  headers: any;
+  params: any;
+  get(name: string): string | undefined;
+  header(name: string): string | undefined;
+  method: string;
+  url: string;
+  originalUrl: string;
+  baseUrl: string;
+  path: string;
+  hostname: string;
+  ip: string;
+  protocol: string;
+  route: any;
+  cookies: any;
+  signedCookies: any;
 }
 
 // 声明合并扩展Express Request
