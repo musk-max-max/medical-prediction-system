@@ -2,7 +2,10 @@ import sqlite3 from 'sqlite3';
 import { Sequelize } from 'sequelize';
 import path from 'path';
 
-const dbPath = path.resolve(__dirname, '../../data/medical_prediction.db');
+// 在生产环境使用临时目录，开发环境使用本地目录
+const dbPath = process.env.NODE_ENV === 'production' 
+  ? path.resolve('/tmp/medical_prediction.db')  // Render的临时目录
+  : path.resolve(__dirname, '../../data/medical_prediction.db');
 
 // SQLite 数据库连接
 const db = new sqlite3.Database(dbPath, (err) => {
@@ -67,7 +70,11 @@ function initializeTables() {
 export const sequelize = new Sequelize({
   dialect: 'sqlite',
   storage: dbPath,
-  logging: false
+  logging: false,
+  dialectOptions: {
+    // 允许在只读文件系统中创建数据库
+    mode: sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE
+  }
 });
 
 // 测试数据库连接
