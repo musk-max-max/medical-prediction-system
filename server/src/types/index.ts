@@ -54,4 +54,11 @@ export interface AuthResponse {
 
 export interface PredictionRequest extends HealthData {
   // 继承HealthData的所有字段
+}
+
+// Express扩展接口
+import { Request } from 'express';
+
+export interface AuthRequest extends Request {
+  user?: User;
 } 
