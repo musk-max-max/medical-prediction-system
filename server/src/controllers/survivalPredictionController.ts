@@ -64,7 +64,7 @@ export const predictSurvivalTimes = async (req: Request, res: Response) => {
     await fs.writeFile(tempInputFile, JSON.stringify(processedData, null, 2));
 
     // 调用Python生存分析脚本
-    const pythonScript = path.resolve(__dirname, '../../../ml_analysis/survival_model.py');
+    const pythonScript = path.resolve(__dirname, '../../../ml_analysis/survival_inference.py');
     
     console.log('🐍 调用生存分析脚本:', pythonScript);
     console.log('📝 输入文件:', tempInputFile);
