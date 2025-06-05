@@ -85,6 +85,8 @@ class FraminghamPredictor:
 
     def preprocess_input(self, patient_data):
         """预处理输入数据"""
+        print(f"📥 输入数据: {patient_data}")
+        
         # 确保所有必需的特征都存在
         if self.feature_names is None:
             # 默认特征顺序
@@ -93,23 +95,46 @@ class FraminghamPredictor:
         else:
             features = self.feature_names
         
+        print(f"🔧 期望特征: {features}")
+        
         # 创建特征向量
         feature_vector = []
         for feature in features:
-            if feature.upper() in patient_data:
-                feature_vector.append(patient_data[feature.upper()])
-            elif feature.lower() in patient_data:
-                feature_vector.append(patient_data[feature.lower()])
-            else:
-                # 使用默认值
+            value = None
+            
+            # 尝试多种键名格式
+            for key_format in [feature.upper(), feature.lower(), feature]:
+                if key_format in patient_data:
+                    value = patient_data[key_format]
+                    break
+            
+            # 如果还没找到，尝试映射
+            if value is None:
+                mapping = {
+                    'SEX': 'sex', 'AGE': 'age', 'TOTCHOL': 'totchol',
+                    'SYSBP': 'sysbp', 'DIABP': 'diabp', 'CURSMOKE': 'cursmoke',
+                    'CIGPDAY': 'cigpday', 'BMI': 'bmi', 'DIABETES': 'diabetes',
+                    'BPMEDS': 'bpmeds', 'HEARTRTE': 'heartrte', 'GLUCOSE': 'glucose'
+                }
+                mapped_key = mapping.get(feature.upper())
+                if mapped_key and mapped_key in patient_data:
+                    value = patient_data[mapped_key]
+            
+            # 使用默认值
+            if value is None:
                 default_values = {
                     'SEX': 1, 'AGE': 50, 'TOTCHOL': 200, 'SYSBP': 120, 'DIABP': 80,
                     'CURSMOKE': 0, 'CIGPDAY': 0, 'BMI': 25, 'DIABETES': 0,
                     'BPMEDS': 0, 'HEARTRTE': 70, 'GLUCOSE': 90
                 }
-                feature_vector.append(default_values.get(feature.upper(), 0))
+                value = default_values.get(feature.upper(), 0)
+            
+            feature_vector.append(float(value))
+            print(f"   {feature}: {value}")
         
-        return np.array(feature_vector).reshape(1, -1)
+        result = np.array(feature_vector).reshape(1, -1)
+        print(f"🔢 特征向量形状: {result.shape}")
+        return result
 
     def predict_single_disease(self, patient_data, disease):
         """预测单个疾病的风险"""

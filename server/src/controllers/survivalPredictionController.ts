@@ -59,17 +59,14 @@ export const predictSurvivalTimes = async (req: Request, res: Response) => {
 
     console.log('📋 处理后的健康数据:', processedData);
 
-    // 创建临时输入文件
-    const tempInputFile = path.join(__dirname, '../../', `temp_survival_input_${uuidv4()}.json`);
-    await fs.writeFile(tempInputFile, JSON.stringify(processedData, null, 2));
-
     // 调用Python生存分析脚本
     const pythonScript = path.resolve(__dirname, '../../../ml_analysis/survival_inference.py');
+    const inputData = JSON.stringify(processedData);
     
     console.log('🐍 调用生存分析脚本:', pythonScript);
-    console.log('📝 输入文件:', tempInputFile);
+    console.log('📝 输入数据:', inputData);
 
-    const pythonProcess = spawn('python', [pythonScript, tempInputFile], {
+    const pythonProcess = spawn('python', [pythonScript, inputData], {
       stdio: ['pipe', 'pipe', 'pipe']
     });
 
@@ -91,13 +88,6 @@ export const predictSurvivalTimes = async (req: Request, res: Response) => {
 
     pythonProcess.on('close', async (code) => {
       clearTimeout(timeout);
-      
-      // 清理临时文件
-      try {
-        await fs.unlink(tempInputFile);
-      } catch (error) {
-        console.warn('⚠️ 清理临时文件失败:', error);
-      }
 
       if (code !== 0) {
         console.error('❌ Python脚本执行失败:');
