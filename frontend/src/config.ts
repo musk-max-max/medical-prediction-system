@@ -6,7 +6,7 @@ const config = {
   },
   // 生产环境 - 请替换为您的Render部署URL
   production: {
-    API_BASE_URL: 'https://your-app-name.onrender.com/api'
+    API_BASE_URL: 'https://YOUR-ACTUAL-RENDER-URL.onrender.com/api'
   }
 };
 

@@ -98,11 +98,6 @@ app.use('/api/predict', predictionLimiter);
 // 路由
 app.use('/api', routes);
 
-// 健康检查
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok' });
-});
-
 // 错误处理中间件
 app.use((err: any, req: any, res: any, next: any) => {
   console.error('服务器错误:', err);
