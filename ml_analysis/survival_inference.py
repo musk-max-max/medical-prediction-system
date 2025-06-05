@@ -10,10 +10,15 @@ import json
 import sys
 import os
 import warnings
+from sklearn.preprocessing import StandardScaler
 import joblib
 import pickle
 
 warnings.filterwarnings('ignore')
+
+def log_message(message):
+    """将调试信息输出到stderr"""
+    print(message, file=sys.stderr, flush=True)
 
 class FraminghamPredictor:
     def __init__(self):
@@ -41,7 +46,7 @@ class FraminghamPredictor:
 
     def load_models(self, model_dir='./ml_analysis'):
         """加载所有预训练模型"""
-        print("📂 加载预训练模型...")
+        log_message("Loading pretrained models...")
         
         try:
             # 加载特征名称
@@ -49,7 +54,7 @@ class FraminghamPredictor:
             if os.path.exists(feature_path):
                 with open(feature_path, 'rb') as f:
                     self.feature_names = pickle.load(f)
-                print(f"✅ 特征名称: {len(self.feature_names)} 个特征")
+                log_message(f"Feature names loaded: {len(self.feature_names)} features")
             
             # 加载每种疾病的模型
             loaded_count = 0
@@ -67,35 +72,35 @@ class FraminghamPredictor:
                         self.scalers[disease] = joblib.load(scaler_path)
                         self.imputers[disease] = joblib.load(imputer_path)
                         
-                        print(f"✅ {self.disease_names[disease]} 模型加载成功")
+                        log_message(f"{self.disease_names[disease]} model loaded successfully")
                         loaded_count += 1
                     else:
-                        print(f"⚠️  {disease} 模型文件缺失")
+                        log_message(f"{disease} model files missing")
                         
                 except Exception as e:
-                    print(f"❌ {disease} 模型加载失败: {e}")
+                    log_message(f"{disease} model loading failed: {e}")
                     continue
             
-            print(f"📊 总计加载 {loaded_count}/{len(self.diseases)} 个模型")
+            log_message(f"Total loaded {loaded_count}/{len(self.diseases)} models")
             return loaded_count > 0
             
         except Exception as e:
-            print(f"❌ 模型加载失败: {e}")
+            log_message(f"Model loading failed: {e}")
             return False
 
     def preprocess_input(self, patient_data):
         """预处理输入数据"""
-        print(f"📥 输入数据: {patient_data}")
+        log_message(f"Input data: {patient_data}")
         
-        # 确保所有必需的特征都存在
-        if self.feature_names is None:
-            # 默认特征顺序
-            features = ['SEX', 'AGE', 'TOTCHOL', 'SYSBP', 'DIABP', 'CURSMOKE', 
-                       'CIGPDAY', 'BMI', 'DIABETES', 'BPMEDS', 'HEARTRTE', 'GLUCOSE']
-        else:
-            features = self.feature_names
+        # 使用基础的18个特征，而不是扩展的22个特征
+        # 这些是所有模型训练时使用的基本特征
+        features = [
+            'SEX', 'AGE', 'TOTCHOL', 'SYSBP', 'DIABP', 'CURSMOKE', 
+            'CIGPDAY', 'BMI', 'DIABETES', 'BPMEDS', 'HEARTRTE', 'GLUCOSE',
+            'PREVCHD', 'PREVAP', 'PREVMI', 'PREVSTRK', 'PREVHYP', 'PULSE_PRESSURE'
+        ]
         
-        print(f"🔧 期望特征: {features}")
+        log_message(f"Using 18 core features (models expect this): {features}")
         
         # 创建特征向量
         feature_vector = []
@@ -120,20 +125,28 @@ class FraminghamPredictor:
                 if mapped_key and mapped_key in patient_data:
                     value = patient_data[mapped_key]
             
-            # 使用默认值
+            # 使用默认值（包括计算特征的默认值）
             if value is None:
                 default_values = {
                     'SEX': 1, 'AGE': 50, 'TOTCHOL': 200, 'SYSBP': 120, 'DIABP': 80,
                     'CURSMOKE': 0, 'CIGPDAY': 0, 'BMI': 25, 'DIABETES': 0,
-                    'BPMEDS': 0, 'HEARTRTE': 70, 'GLUCOSE': 90
+                    'BPMEDS': 0, 'HEARTRTE': 70, 'GLUCOSE': 90,
+                    'PREVCHD': 0, 'PREVAP': 0, 'PREVMI': 0, 'PREVSTRK': 0, 'PREVHYP': 0,
+                    'PULSE_PRESSURE': 0  # 会在下面计算
                 }
                 value = default_values.get(feature.upper(), 0)
+                
+                # 计算脉压
+                if feature == 'PULSE_PRESSURE':
+                    sysbp = patient_data.get('sysbp', 120)
+                    diabp = patient_data.get('diabp', 80)
+                    value = float(sysbp) - float(diabp)
             
             feature_vector.append(float(value))
-            print(f"   {feature}: {value}")
+            log_message(f"   {feature}: {value}")
         
         result = np.array(feature_vector).reshape(1, -1)
-        print(f"🔢 特征向量形状: {result.shape}")
+        log_message(f"Feature vector shape: {result.shape}")
         return result
 
     def predict_single_disease(self, patient_data, disease):
@@ -168,7 +181,7 @@ class FraminghamPredictor:
             return risk_prob
             
         except Exception as e:
-            print(f"❌ {disease} 预测失败: {e}")
+            log_message(f"{disease} prediction failed: {e}")
             return None
 
     def calculate_survival_metrics(self, risk_prob):
@@ -202,13 +215,13 @@ class FraminghamPredictor:
 
     def predict_all_diseases(self, patient_data):
         """预测所有疾病的风险"""
-        print("🔬 开始疾病风险预测...")
+        log_message("Starting disease risk prediction...")
         
         predictions = {}
         
         for disease in self.diseases:
             if disease in self.models:
-                print(f"   🎯 预测 {self.disease_names[disease]}...")
+                log_message(f"   Predicting {self.disease_names[disease]}...")
                 
                 risk_prob = self.predict_single_disease(patient_data, disease)
                 
@@ -220,9 +233,9 @@ class FraminghamPredictor:
                     disease_key = disease.upper()
                     predictions[disease_key] = survival_metrics
                     
-                    print(f"     ✅ 风险概率: {risk_prob:.3f}, 预期时间: {survival_metrics['expected_time_years']:.1f}年")
+                    log_message(f"     Risk probability: {risk_prob:.3f}, Expected time: {survival_metrics['expected_time_years']:.1f}years")
                 else:
-                    print(f"     ❌ 预测失败")
+                    log_message(f"     Prediction failed")
         
         return predictions
 
@@ -232,7 +245,7 @@ class FraminghamPredictor:
         if not self.load_models():
             return {
                 'success': False,
-                'error': '无法加载预训练模型'
+                'error': 'Unable to load pretrained models'
             }
         
         # 进行预测
@@ -241,7 +254,7 @@ class FraminghamPredictor:
         if not predictions:
             return {
                 'success': False,
-                'error': '所有疾病预测都失败了'
+                'error': 'All disease predictions failed'
             }
         
         return {
@@ -273,13 +286,13 @@ def main():
         # 运行预测
         result = predictor.run_prediction(patient_data)
         
-        # 输出结果
+        # 输出结果到stdout（只有JSON）
         print(json.dumps(result, ensure_ascii=False, indent=2))
         
     except Exception as e:
         print(json.dumps({
             "success": False,
-            "error": f"生存分析失败: {str(e)}"
+            "error": f"Survival analysis failed: {str(e)}"
         }))
 
 if __name__ == "__main__":
