@@ -208,8 +208,8 @@ export const predict = async (req: AuthRequest, res: Response): Promise<void> =>
       return;
     }
 
-    const userId = req.user?.userId;
-    if (!userId) {
+      const userId = req.user?.id;
+  if (!userId) {
       res.status(401).json({ 
         success: false,
         message: '用户未认证' 
@@ -293,8 +293,8 @@ export const predict = async (req: AuthRequest, res: Response): Promise<void> =>
 // 获取用户历史预测记录
 export const getPredictionHistory = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const userId = req.user?.userId;
-    const isAdmin = req.user?.isAdmin; // 使用 isAdmin 字段
+    const userId = req.user?.id;
+    const isAdmin = req.user?.is_admin; // 使用 is_admin 字段
     const { search } = req.query as { search?: string };
 
     if (!userId) {
