@@ -59,11 +59,11 @@ export const predictSurvivalTimes = async (req: Request, res: Response) => {
 
     console.log('📋 处理后的健康数据:', processedData);
 
-    // 调用Python生存分析脚本
-    const pythonScript = path.resolve(__dirname, '../../../ml_analysis/survival_inference.py');
+    // 调用Python生存分析脚本 (使用Cox时间变化模型)
+    const pythonScript = path.resolve(__dirname, '../../../ml_analysis/cox_survival_inference.py');
     const inputData = JSON.stringify(processedData);
     
-    console.log('🐍 调用生存分析脚本:', pythonScript);
+    console.log('🐍 调用Cox生存分析脚本:', pythonScript);
     console.log('📝 输入数据:', inputData);
 
     const pythonProcess = spawn('python3', [pythonScript, inputData], {
@@ -134,11 +134,11 @@ export const predictSurvivalTimes = async (req: Request, res: Response) => {
         // 返回预测结果
         res.json({
           success: true,
-          message: '生存分析预测完成',
+          message: 'Cox时间变化生存分析预测完成',
           survival_predictions: result.survival_predictions,
           metadata: {
             timestamp: new Date().toISOString(),
-            model_type: 'survival_analysis',
+            model_type: 'cox_time_varying',
             input_features: Object.keys(processedData).length
           }
         });
