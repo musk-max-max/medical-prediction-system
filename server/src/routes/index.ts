@@ -3,6 +3,7 @@ import { register, login, registerValidation, loginValidation } from '../control
 import { predict, getPredictionHistory, deletePredictionHistory } from '../controllers/predictionController';
 import { predictSurvivalTimes, getSurvivalModelInfo } from '../controllers/survivalPredictionController';
 import { getHealthStatus, getAIStatus } from '../controllers/healthController';
+import { testOpenAI } from '../controllers/testController';
 import { authenticateToken } from '../utils/auth';
 
 const router = express.Router();
@@ -27,6 +28,9 @@ router.get('/test-survival-info', getSurvivalModelInfo);
 // 健康检查
 router.get('/health', getHealthStatus);
 router.get('/ai-status', getAIStatus);
+
+// OpenAI测试端点
+router.get('/test-openai', testOpenAI);
 
 // 临时测试端点 - 检查Cox文件
 router.get('/test-cox-files', (req, res) => {
