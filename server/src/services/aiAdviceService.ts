@@ -37,6 +37,7 @@ class AIAdviceService {
 
   constructor() {
     const apiKey = process.env.OPENAI_API_KEY;
+    console.log('🔍 OpenAI API key found:', apiKey ? `${apiKey.substring(0, 10)}...` : 'NOT FOUND');
     if (apiKey && apiKey.trim() !== '') {
       this.openai = new OpenAI({
         apiKey: apiKey,
@@ -93,12 +94,14 @@ class AIAdviceService {
       const aiAdvice = completion.choices[0]?.message?.content;
       if (aiAdvice && aiAdvice.trim() !== '') {
         console.log('✅ AI advice generated successfully');
+        console.log('🔍 AI content preview:', aiAdvice.substring(0, 100) + '...');
         return {
           content: aiAdvice.trim(),
           generated_by: 'ai'
         };
       } else {
         console.log('⚠️ AI response was empty, using fallback');
+        console.log('🔍 Completion object:', JSON.stringify(completion, null, 2));
         return {
           content: this.getFallbackAdvice(predictions, options.language),
           generated_by: 'fallback'
@@ -106,6 +109,7 @@ class AIAdviceService {
       }
     } catch (error) {
       console.error('❌ OpenAI API error:', error);
+      console.error('🔍 Error details:', JSON.stringify(error, null, 2));
       return {
         content: this.getFallbackAdvice(predictions, options.language),
         generated_by: 'fallback'
