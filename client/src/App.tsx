@@ -399,12 +399,12 @@ const App: React.FC = () => {
 
       console.log('发起风险评估请求...');
       const riskPromise = axios.post('/predict', requestData, {
-        timeout: 60000 // 60秒超时
+        timeout: 120000 // 增加到120秒超时，给AI分析更多时间
       });
 
       console.log('发起生存分析请求...');
       const survivalPromise = axios.post('/survival/predict', healthForm, {
-        timeout: 60000 // 60秒超时
+        timeout: 120000 // 增加到120秒超时
       });
 
       // 等待两个请求都完成

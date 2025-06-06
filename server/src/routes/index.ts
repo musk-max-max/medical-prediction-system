@@ -2,6 +2,7 @@ import express from 'express';
 import { register, login, registerValidation, loginValidation } from '../controllers/authController';
 import { predict, getPredictionHistory, deletePredictionHistory } from '../controllers/predictionController';
 import { predictSurvivalTimes, getSurvivalModelInfo } from '../controllers/survivalPredictionController';
+import { getHealthStatus, getAIStatus } from '../controllers/healthController';
 import { authenticateToken } from '../utils/auth';
 
 const router = express.Router();
@@ -24,17 +25,8 @@ router.post('/test-survival-predict', predictSurvivalTimes);
 router.get('/test-survival-info', getSurvivalModelInfo);
 
 // 健康检查
-router.get('/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    message: '医疗预测系统运行正常',
-    timestamp: new Date().toISOString(),
-    features: {
-      risk_prediction: true,
-      survival_analysis: true
-    }
-  });
-});
+router.get('/health', getHealthStatus);
+router.get('/ai-status', getAIStatus);
 
 // 临时测试端点 - 检查Cox文件
 router.get('/test-cox-files', (req, res) => {

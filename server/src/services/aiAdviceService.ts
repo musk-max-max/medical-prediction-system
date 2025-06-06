@@ -51,24 +51,27 @@ class AIAdviceService {
     try {
       const prompt = this.buildPrompt(healthData, predictions, options);
       
-      const completion = await this.openai.chat.completions.create({
-        model: "gpt-3.5-turbo",
-        messages: [
-          {
+      const completion = await Promise.race([
+        this.openai.chat.completions.create({
+          model: "gpt-3.5-turbo",
+          messages: [
+                      {
             role: "system",
-            content: options.language === 'zh' 
-              ? "你是一位专业的医疗健康顾问，基于用户的健康数据和疾病风险预测，为用户提供个性化、专业且易懂的健康建议。请用温和、专业的语调，避免过度恐慌，重点关注预防和生活方式改善。"
-              : "You are a professional medical health advisor. Based on user health data and disease risk predictions, provide personalized, professional, and understandable health advice. Use a gentle, professional tone, avoid excessive panic, and focus on prevention and lifestyle improvements."
+            content: "You are a professional medical health advisor. Based on user health data and disease risk predictions, provide personalized, professional, and understandable health advice. Use a gentle, professional tone, avoid excessive panic, and focus on prevention and lifestyle improvements. IMPORTANT: Always respond in English only, regardless of the input language."
           },
-          {
-            role: "user",
-            content: prompt
-          }
-        ],
-        max_tokens: 800,
-        temperature: 0.7,
-        top_p: 0.9,
-      });
+            {
+              role: "user",
+              content: prompt
+            }
+          ],
+          max_tokens: 800,
+          temperature: 0.7,
+          top_p: 0.9,
+        }),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('OpenAI API timeout after 30 seconds')), 30000)
+        )
+      ]) as any;
 
       const aiAdvice = completion.choices[0]?.message?.content;
       if (aiAdvice && aiAdvice.trim() !== '') {
@@ -107,49 +110,63 @@ class AIAdviceService {
       .filter(([_, pred]) => pred.risk_level === 'Medium')
       .map(([_, pred]) => pred.name);
 
-    if (language === 'zh') {
-      return `
-请基于以下患者信息提供个性化健康建议：
+    // Always use English prompts to ensure English responses
+    const patientInfoEn = {
+      age: healthData.age,
+      gender: healthData.sex === 1 ? 'male' : 'female',
+      bmi: healthData.bmi || 'unknown',
+      smoking: healthData.cursmoke === 1 ? 'smoker' : 'non-smoker',
+      diabetes: healthData.diabetes === 1 ? 'diabetic' : 'non-diabetic',
+      bpMeds: healthData.bpmeds === 1 ? 'on BP medication' : 'not on BP medication'
+    };
 
-患者基本信息：
-- 年龄：${patientInfo.age}岁
-- 性别：${patientInfo.gender}
-- BMI：${patientInfo.bmi}
-- 吸烟状态：${patientInfo.smoking}
-- 糖尿病：${patientInfo.diabetes}
-- 降压药使用：${patientInfo.bpMeds}
-${healthData.sysbp ? `- 收缩压：${healthData.sysbp} mmHg` : ''}
-${healthData.totchol ? `- 总胆固醇：${healthData.totchol} mg/dL` : ''}
+    // Convert disease names to English
+    const highRiskDiseasesEn = Object.entries(predictions)
+      .filter(([_, pred]) => pred.risk_level === 'High')
+      .map(([disease, _]) => {
+        const diseaseMap: {[key: string]: string} = {
+          'CVD': 'Cardiovascular Disease',
+          'CHD': 'Coronary Heart Disease', 
+          'STROKE': 'Stroke',
+          'ANGINA': 'Angina',
+          'MI': 'Myocardial Infarction',
+          'HYPERTENSION': 'Hypertension',
+          'DEATH': 'Death Risk'
+        };
+        return diseaseMap[disease] || disease;
+      });
+    
+    const mediumRiskDiseasesEn = Object.entries(predictions)
+      .filter(([_, pred]) => pred.risk_level === 'Medium')
+      .map(([disease, _]) => {
+        const diseaseMap: {[key: string]: string} = {
+          'CVD': 'Cardiovascular Disease',
+          'CHD': 'Coronary Heart Disease',
+          'STROKE': 'Stroke', 
+          'ANGINA': 'Angina',
+          'MI': 'Myocardial Infarction',
+          'HYPERTENSION': 'Hypertension',
+          'DEATH': 'Death Risk'
+        };
+        return diseaseMap[disease] || disease;
+      });
 
-疾病风险评估结果：
-${highRiskDiseases.length > 0 ? `高风险疾病：${highRiskDiseases.join('、')}` : ''}
-${mediumRiskDiseases.length > 0 ? `中等风险疾病：${mediumRiskDiseases.join('、')}` : ''}
-
-请提供：
-1. 针对高风险疾病的具体预防建议
-2. 生活方式改善建议（饮食、运动、作息）
-3. 医疗检查和随访建议
-4. 心理健康和压力管理建议
-
-请用温和、鼓励的语调，避免恐慌，重点关注积极的生活方式改变。
-      `;
-    } else {
-      return `
+    return `
 Please provide personalized health advice based on the following patient information:
 
 Patient Basic Information:
-- Age: ${patientInfo.age} years old
-- Gender: ${patientInfo.gender}
-- BMI: ${patientInfo.bmi}
-- Smoking status: ${patientInfo.smoking}
-- Diabetes: ${patientInfo.diabetes}
-- BP medication: ${patientInfo.bpMeds}
+- Age: ${patientInfoEn.age} years old
+- Gender: ${patientInfoEn.gender}
+- BMI: ${patientInfoEn.bmi}
+- Smoking status: ${patientInfoEn.smoking}
+- Diabetes: ${patientInfoEn.diabetes}
+- BP medication: ${patientInfoEn.bpMeds}
 ${healthData.sysbp ? `- Systolic BP: ${healthData.sysbp} mmHg` : ''}
 ${healthData.totchol ? `- Total cholesterol: ${healthData.totchol} mg/dL` : ''}
 
 Disease Risk Assessment Results:
-${highRiskDiseases.length > 0 ? `High-risk diseases: ${highRiskDiseases.join(', ')}` : ''}
-${mediumRiskDiseases.length > 0 ? `Medium-risk diseases: ${mediumRiskDiseases.join(', ')}` : ''}
+${highRiskDiseasesEn.length > 0 ? `High-risk diseases: ${highRiskDiseasesEn.join(', ')}` : 'No high-risk diseases identified'}
+${mediumRiskDiseasesEn.length > 0 ? `Medium-risk diseases: ${mediumRiskDiseasesEn.join(', ')}` : 'No medium-risk diseases identified'}
 
 Please provide:
 1. Specific prevention recommendations for high-risk diseases
@@ -157,9 +174,8 @@ Please provide:
 3. Medical checkup and follow-up recommendations
 4. Mental health and stress management advice
 
-Please use a gentle, encouraging tone, avoid panic, and focus on positive lifestyle changes.
-      `;
-    }
+Please use a gentle, encouraging tone, avoid panic, and focus on positive lifestyle changes. Respond in English only.
+    `;
   }
 
   // 备用建议（当AI不可用时）
@@ -195,18 +211,15 @@ Please use a gentle, encouraging tone, avoid panic, and focus on positive lifest
     }
 
     try {
-      const prompt = language === 'zh'
-        ? `请为${healthData.age}岁${healthData.sex === 1 ? '男性' : '女性'}患者提供关于${disease}的${riskLevel}风险管理建议。请提供3-5条具体、可执行的建议，每条建议控制在30字以内。`
-        : `Please provide ${riskLevel} risk management advice for ${disease} for a ${healthData.age}-year-old ${healthData.sex === 1 ? 'male' : 'female'} patient. Provide 3-5 specific, actionable recommendations, each within 30 words.`;
+      // Always use English prompts
+      const prompt = `Please provide ${riskLevel} risk management advice for ${disease} for a ${healthData.age}-year-old ${healthData.sex === 1 ? 'male' : 'female'} patient. Provide 3-5 specific, actionable recommendations, each within 30 words. Respond in English only.`;
 
       const completion = await this.openai.chat.completions.create({
         model: "gpt-3.5-turbo",
         messages: [
           {
             role: "system",
-            content: language === 'zh' 
-              ? "你是专业医疗顾问，提供简洁实用的健康建议。"
-              : "You are a professional medical advisor providing concise and practical health advice."
+            content: "You are a professional medical advisor providing concise and practical health advice. Always respond in English only."
           },
           {
             role: "user",
