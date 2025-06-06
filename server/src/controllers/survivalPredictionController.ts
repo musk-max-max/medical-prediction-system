@@ -60,7 +60,7 @@ export const predictSurvivalTimes = async (req: Request, res: Response) => {
     console.log('📋 处理后的健康数据:', processedData);
 
     // 调用Python生存分析脚本 (使用Cox时间变化模型)
-    const pythonScript = path.resolve(__dirname, '../../../ml_analysis/cox_survival_inference.py');
+    const pythonScript = path.resolve(__dirname, '../../../ml_analysis/cox_multi_disease_inference.py');
     const inputData = JSON.stringify(processedData);
     
     console.log('🐍 调用Cox生存分析脚本:', pythonScript);
