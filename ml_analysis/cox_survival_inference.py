@@ -29,6 +29,51 @@ class CoxTimeVaryingPredictor:
     def load_models(self, model_dir='.'):
         """加载训练好的Cox模型"""
         log_message("Loading Cox Time-Varying models...")
+        log_message(f"Current working directory: {os.getcwd()}")
+        log_message(f"Script location: {os.path.abspath(__file__)}")
+        log_message(f"Model directory: {model_dir}")
+        
+        # 尝试多个可能的路径
+        possible_dirs = [
+            model_dir,
+            os.path.dirname(os.path.abspath(__file__)),
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'ml_analysis'),
+            '/opt/render/project/src/ml_analysis',
+            '/opt/render/project/ml_analysis',
+            '.'
+        ]
+        
+        model_files = {
+            'cox_model': 'cox_timevarying_model.pkl',
+            'scaler': 'cox_tv_scaler.pkl', 
+            'imputer': 'cox_tv_imputer.pkl',
+            'features': 'cox_tv_features.pkl'
+        }
+        
+        # 记录文件搜索过程
+        log_message("Searching for model files...")
+        for directory in possible_dirs:
+            log_message(f"Checking directory: {directory}")
+            if os.path.exists(directory):
+                files_in_dir = os.listdir(directory)
+                log_message(f"  Files found: {files_in_dir}")
+                
+                # 检查是否所有模型文件都存在
+                all_files_found = True
+                for file_key, filename in model_files.items():
+                    file_path = os.path.join(directory, filename)
+                    if os.path.exists(file_path):
+                        log_message(f"  ✓ Found {filename}")
+                    else:
+                        log_message(f"  ✗ Missing {filename}")
+                        all_files_found = False
+                
+                if all_files_found:
+                    log_message(f"All model files found in: {directory}")
+                    model_dir = directory
+                    break
+            else:
+                log_message(f"  Directory does not exist")
         
         try:
             # 加载Cox模型
@@ -36,9 +81,9 @@ class CoxTimeVaryingPredictor:
             if os.path.exists(cox_model_path):
                 with open(cox_model_path, 'rb') as f:
                     self.cox_model = pickle.load(f)
-                log_message("Cox model loaded successfully")
+                log_message(f"Cox model loaded successfully from: {cox_model_path}")
             else:
-                log_message("Cox model file not found")
+                log_message(f"Cox model file not found at: {cox_model_path}")
                 return False
             
             # 加载预处理器
