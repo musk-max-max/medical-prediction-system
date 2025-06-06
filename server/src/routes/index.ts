@@ -19,6 +19,10 @@ router.delete('/predict/history', authenticateToken, deletePredictionHistory);
 router.post('/survival/predict', authenticateToken, predictSurvivalTimes);
 router.get('/survival/model-info', authenticateToken, getSurvivalModelInfo);
 
+// 临时测试端点 - 无需认证的Cox模型测试
+router.post('/test-survival-predict', predictSurvivalTimes);
+router.get('/test-survival-info', getSurvivalModelInfo);
+
 // 健康检查
 router.get('/health', (req, res) => {
   res.json({
