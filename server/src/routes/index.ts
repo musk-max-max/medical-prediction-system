@@ -42,7 +42,7 @@ router.get('/test-cox-files', (req, res) => {
   const path = require('path');
   
       const pythonScript = path.resolve(__dirname, '../../ml_analysis/test_cox_files.py');
-    const pythonExecutable = process.env.PYTHON_PATH || '/opt/render/project/.venv/bin/python' || 'python3';
+    const pythonExecutable = process.env.PYTHON_PATH || 'python3';
     const pythonProcess = spawn(pythonExecutable, [pythonScript], {
     cwd: path.resolve(__dirname, '../../ml_analysis')
   });
@@ -87,7 +87,7 @@ router.get('/diagnose-env', (req, res) => {
   const path = require('path');
   
       const pythonScript = path.resolve(__dirname, '../../ml_analysis/diagnose_render_env.py');
-    const pythonExecutable = process.env.PYTHON_PATH || '/opt/render/project/.venv/bin/python' || 'python3';
+    const pythonExecutable = process.env.PYTHON_PATH || 'python3';
     const pythonProcess = spawn(pythonExecutable, [pythonScript], {
     cwd: path.resolve(__dirname, '../../ml_analysis')
   });

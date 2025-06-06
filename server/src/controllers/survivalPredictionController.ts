@@ -66,8 +66,8 @@ export const predictSurvivalTimes = async (req: Request, res: Response) => {
     console.log('🐍 调用Cox生存分析脚本:', pythonScript);
     console.log('📝 输入数据:', inputData);
 
-    // 使用虚拟环境中的Python，fallback到系统Python
-    const pythonExecutable = process.env.PYTHON_PATH || '/opt/render/project/.venv/bin/python' || 'python3';
+    // 先尝试环境变量，然后fallback到python3
+    const pythonExecutable = process.env.PYTHON_PATH || 'python3';
     console.log('🐍 使用Python命令:', pythonExecutable);
     console.log('🔍 PYTHON_PATH环境变量:', process.env.PYTHON_PATH);
     
