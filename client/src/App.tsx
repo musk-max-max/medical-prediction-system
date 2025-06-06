@@ -392,7 +392,7 @@ const App: React.FC = () => {
       const requestData = {
         ...healthForm,
         useAIAdvice: useAIAdvice,
-        language: language
+        language: 'en' // 总是传递英文给AI，确保AI建议使用英文
       };
 
       console.log('发起风险评估请求...');
@@ -430,9 +430,9 @@ const App: React.FC = () => {
       } else if (error.code === 'ERR_NETWORK') {
         errorMessage = t.errors.networkError;
       } else if (error.response?.status === 429) {
-        errorMessage = '⏳ 请求过于频繁，请稍后再试';
+        errorMessage = t.errors.tooManyRequests;
       } else if (error.response?.status === 401) {
-        errorMessage = '🔐 认证失效，请重新登录';
+        errorMessage = t.errors.authenticationFailed;
       } else if (error.response?.data?.error) {
         errorMessage = error.response.data.error;
       } else if (error.response?.data?.message) {
