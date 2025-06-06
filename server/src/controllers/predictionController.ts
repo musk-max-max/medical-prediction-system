@@ -4,6 +4,7 @@ import { spawn } from 'child_process';
 import { database } from '../config/database';
 import { AuthRequest } from '../types';
 import { HealthData, PredictionResult } from '../types';
+import { aiAdviceService } from '../services/aiAdviceService';
 import path from 'path';
 import fs from 'fs';
 
@@ -40,6 +41,11 @@ interface PredictionResponse {
     risk_category: string;
   };
   health_data_id?: number;
+  ai_advice?: {
+    enabled: boolean;
+    content: string;
+    generated_by: 'ai' | 'fallback';
+  };
 }
 
 // 疾病信息配置
@@ -393,16 +399,47 @@ export const predict = async (req: AuthRequest, res: Response): Promise<void> =>
       risk_category: riskCategory
     };
 
-    // 5. 保存预测结果到数据库
+    // 5. 生成AI健康建议
+    let aiAdvice = null;
+    const useAI = req.body.useAIAdvice !== false; // 默认启用，除非明确设置为false
+    const language = req.body.language || 'zh';
+
+    if (useAI) {
+      console.log('🤖 生成AI健康建议...');
+      try {
+        const aiAdviceContent = await aiAdviceService.generateHealthAdvice(
+          healthData,
+          predictions,
+          { language, includePersonalization: true }
+        );
+        
+        aiAdvice = {
+          enabled: aiAdviceService.getIsEnabled(),
+          content: aiAdviceContent,
+          generated_by: aiAdviceService.getIsEnabled() ? 'ai' : 'fallback'
+        };
+        console.log('✅ AI建议生成完成');
+      } catch (error) {
+        console.error('❌ AI建议生成失败:', error);
+        aiAdvice = {
+          enabled: false,
+          content: language === 'zh' ? '暂时无法生成个性化建议，请参考各疾病的具体建议。' : 'Unable to generate personalized advice at the moment, please refer to specific disease recommendations.',
+          generated_by: 'fallback'
+        };
+      }
+    }
+
+    // 6. 保存预测结果到数据库
     await savePredictionResults(userId, healthDataId, predictions);
 
-    // 6. 返回结果
+    // 7. 返回结果
     const response: PredictionResponse = {
       success: true,
       message: '预测完成',
       predictions,
       overall_risk: overallRisk,
-      health_data_id: healthDataId
+      health_data_id: healthDataId,
+      ai_advice: aiAdvice
     };
 
     res.status(200).json(response);
