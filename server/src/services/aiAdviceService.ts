@@ -57,9 +57,12 @@ class AIAdviceService {
     healthData: HealthData,
     predictions: PredictionResult,
     options: AIAdviceOptions = { language: 'zh', includePersonalization: true }
-  ): Promise<string> {
+  ): Promise<{ content: string; generated_by: 'ai' | 'fallback' }> {
     if (!this.isEnabled || !this.openai) {
-      return this.getFallbackAdvice(predictions, options.language);
+      return {
+        content: this.getFallbackAdvice(predictions, options.language),
+        generated_by: 'fallback'
+      };
     }
 
     try {
@@ -90,14 +93,23 @@ class AIAdviceService {
       const aiAdvice = completion.choices[0]?.message?.content;
       if (aiAdvice && aiAdvice.trim() !== '') {
         console.log('✅ AI advice generated successfully');
-        return aiAdvice.trim();
+        return {
+          content: aiAdvice.trim(),
+          generated_by: 'ai'
+        };
       } else {
         console.log('⚠️ AI response was empty, using fallback');
-        return this.getFallbackAdvice(predictions, options.language);
+        return {
+          content: this.getFallbackAdvice(predictions, options.language),
+          generated_by: 'fallback'
+        };
       }
     } catch (error) {
       console.error('❌ OpenAI API error:', error);
-      return this.getFallbackAdvice(predictions, options.language);
+      return {
+        content: this.getFallbackAdvice(predictions, options.language),
+        generated_by: 'fallback'
+      };
     }
   }
 

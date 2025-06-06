@@ -407,7 +407,7 @@ export const predict = async (req: AuthRequest, res: Response): Promise<void> =>
     if (useAI) {
       console.log('🤖 生成AI健康建议...');
       try {
-        const aiAdviceContent = await aiAdviceService.generateHealthAdvice(
+        const aiAdviceResult = await aiAdviceService.generateHealthAdvice(
           healthData,
           predictions,
           { language, includePersonalization: true }
@@ -415,8 +415,8 @@ export const predict = async (req: AuthRequest, res: Response): Promise<void> =>
         
         aiAdvice = {
           enabled: aiAdviceService.getIsEnabled(),
-          content: aiAdviceContent,
-          generated_by: aiAdviceService.getIsEnabled() ? 'ai' : 'fallback'
+          content: aiAdviceResult.content,
+          generated_by: aiAdviceResult.generated_by
         };
         console.log('✅ AI建议生成完成');
       } catch (error) {
