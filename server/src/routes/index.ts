@@ -80,4 +80,49 @@ router.get('/test-cox-files', (req, res) => {
   });
 });
 
+// 环境诊断端点
+router.get('/diagnose-env', (req, res) => {
+  const { spawn } = require('child_process');
+  const path = require('path');
+  
+  const pythonScript = path.resolve(__dirname, '../../ml_analysis/diagnose_render_env.py');
+  const pythonProcess = spawn('python', [pythonScript], {
+    cwd: path.resolve(__dirname, '../../ml_analysis')
+  });
+
+  let stdout = '';
+  let stderr = '';
+
+  pythonProcess.stdout.on('data', (data) => {
+    stdout += data.toString();
+  });
+
+  pythonProcess.stderr.on('data', (data) => {
+    stderr += data.toString();
+  });
+
+  pythonProcess.on('close', (code) => {
+    if (code !== 0) {
+      return res.status(500).json({
+        success: false,
+        error: stderr,
+        code: code,
+        stdout: stdout
+      });
+    }
+
+    try {
+      const result = JSON.parse(stdout);
+      res.json(result);
+    } catch (e) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to parse output',
+        stdout: stdout,
+        stderr: stderr
+      });
+    }
+  });
+});
+
 export default router; 
