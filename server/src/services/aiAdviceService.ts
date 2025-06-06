@@ -21,6 +21,20 @@ class AIAdviceService {
   private openai: OpenAI | null = null;
   private isEnabled: boolean = false;
 
+  // 疾病名称映射到英文
+  private getDiseaseNameInEnglish(disease: string): string {
+    const diseaseMap: {[key: string]: string} = {
+      'CVD': 'Cardiovascular Disease',
+      'CHD': 'Coronary Heart Disease', 
+      'STROKE': 'Stroke',
+      'ANGINA': 'Angina',
+      'MI': 'Myocardial Infarction',
+      'HYPERTENSION': 'Hypertension',
+      'DEATH': 'Death Risk'
+    };
+    return diseaseMap[disease] || disease;
+  }
+
   constructor() {
     const apiKey = process.env.OPENAI_API_KEY;
     if (apiKey && apiKey.trim() !== '') {
@@ -123,33 +137,11 @@ class AIAdviceService {
     // Convert disease names to English
     const highRiskDiseasesEn = Object.entries(predictions)
       .filter(([_, pred]) => pred.risk_level === 'High')
-      .map(([disease, _]) => {
-        const diseaseMap: {[key: string]: string} = {
-          'CVD': 'Cardiovascular Disease',
-          'CHD': 'Coronary Heart Disease', 
-          'STROKE': 'Stroke',
-          'ANGINA': 'Angina',
-          'MI': 'Myocardial Infarction',
-          'HYPERTENSION': 'Hypertension',
-          'DEATH': 'Death Risk'
-        };
-        return diseaseMap[disease] || disease;
-      });
+      .map(([disease, _]) => this.getDiseaseNameInEnglish(disease));
     
     const mediumRiskDiseasesEn = Object.entries(predictions)
       .filter(([_, pred]) => pred.risk_level === 'Medium')
-      .map(([disease, _]) => {
-        const diseaseMap: {[key: string]: string} = {
-          'CVD': 'Cardiovascular Disease',
-          'CHD': 'Coronary Heart Disease',
-          'STROKE': 'Stroke', 
-          'ANGINA': 'Angina',
-          'MI': 'Myocardial Infarction',
-          'HYPERTENSION': 'Hypertension',
-          'DEATH': 'Death Risk'
-        };
-        return diseaseMap[disease] || disease;
-      });
+      .map(([disease, _]) => this.getDiseaseNameInEnglish(disease));
 
     return `
 Please provide personalized health advice based on the following patient information:
@@ -182,7 +174,10 @@ Please use a gentle, encouraging tone, avoid panic, and focus on positive lifest
   private getFallbackAdvice(predictions: PredictionResult, language: 'en' | 'zh'): string {
     const highRiskDiseases = Object.entries(predictions)
       .filter(([_, pred]) => pred.risk_level === 'High')
-      .map(([_, pred]) => pred.name);
+      .map(([disease, _]) => {
+        // 总是使用英文疾病名称
+        return this.getDiseaseNameInEnglish(disease);
+      });
 
     if (language === 'zh') {
       if (highRiskDiseases.length === 0) {
@@ -211,8 +206,9 @@ Please use a gentle, encouraging tone, avoid panic, and focus on positive lifest
     }
 
     try {
-      // Always use English prompts
-      const prompt = `Please provide ${riskLevel} risk management advice for ${disease} for a ${healthData.age}-year-old ${healthData.sex === 1 ? 'male' : 'female'} patient. Provide 3-5 specific, actionable recommendations, each within 30 words. Respond in English only.`;
+      // Always use English prompts with English disease names
+      const diseaseNameEn = this.getDiseaseNameInEnglish(disease);
+      const prompt = `Please provide ${riskLevel} risk management advice for ${diseaseNameEn} for a ${healthData.age}-year-old ${healthData.sex === 1 ? 'male' : 'female'} patient. Provide 3-5 specific, actionable recommendations, each within 30 words. Respond in English only.`;
 
       const completion = await this.openai.chat.completions.create({
         model: "gpt-3.5-turbo",
