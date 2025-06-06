@@ -9,7 +9,7 @@ export const translations = {
       noAccount: "Don't have an account?",
       haveAccount: 'Already have an account?',
       testConnection: '🔗 Test API Connection',
-      loading: 'Processing...',
+      loading: 'Loading...',
       testing: 'Testing...'
     },
     register: {
@@ -22,13 +22,13 @@ export const translations = {
       noAccount: "Don't have an account?",
       haveAccount: 'Already have an account?',
       testConnection: '🔗 Test API Connection',
-      loading: 'Processing...',
+      loading: 'Loading...',
       testing: 'Testing...'
     },
     header: {
-      title: '🏥 Medical Prediction System',
+      title: '🏥 Intelligent Medical Prediction System',
       subtitle: 'AI-based Cardiovascular Disease Risk Assessment Platform',
-      welcome: 'Welcome,',
+      welcome: 'Welcome, ',
       logout: 'Logout'
     },
     nav: {
@@ -83,7 +83,8 @@ export const translations = {
       },
       submit: '🔮 Start Comprehensive Analysis',
       analyzing: '🧠 AI is analyzing, please wait...',
-      note: '💡 Risk assessment and survival analysis in progress, this may take 30-60 seconds...'
+      note: '💡 Risk assessment and survival analysis in progress, this may take 30-60 seconds...',
+      completed: '🎉 Comprehensive analysis completed!'
     },
     results: {
       title: '🎯 Prediction Results',
@@ -124,6 +125,37 @@ export const translations = {
       trendAnalysis: 'Trend Analysis',
       trendChart: 'Health Data Trend Analysis',
       recordsCount: 'records'
+    },
+    errors: {
+      serverConnection: 'Unable to connect to server, please ensure backend service is running',
+      networkError: '🔌 Network connection error: Unable to connect to server',
+      predictionFailed: 'Prediction failed, please try again later',
+      requestTimeout: '🕐 Request timeout: AI analysis taking too long, please try again later',
+      tooManyRequests: '⏳ Too many requests, please try again later',
+      authenticationFailed: '🔐 Authentication failed, please login again',
+      loginFailed: 'Login failed',
+      registrationFailed: 'Registration failed',
+      fetchHistoryFailed: 'Failed to fetch history records',
+      deleteRecordsFailed: 'Failed to delete records',
+      connectionTestFailed: 'Connection test failed'
+    },
+    success: {
+      apiConnectionSuccess: 'API connection test successful!',
+      loginSuccess: 'Login successful!',
+      registrationSuccess: 'Registration successful!',
+      logoutSuccess: 'Logged out successfully',
+      recordsDeletedSuccess: 'Selected records deleted successfully'
+    },
+    confirmations: {
+      deleteRecords: 'Are you sure you want to delete the selected records?',
+      emptyFieldsWarning: 'The following fields are empty:\n{fields}\n\nThis may affect prediction accuracy. Continue?'
+    },
+    fields: {
+      totalCholesterol: 'Total Cholesterol',
+      systolicBP: 'Systolic Blood Pressure', 
+      diastolicBP: 'Diastolic Blood Pressure',
+      heartRate: 'Heart Rate',
+      fastingGlucose: 'Fasting Glucose'
     }
   },
   zh: {
@@ -210,7 +242,8 @@ export const translations = {
       },
       submit: '🔮 开始综合分析',
       analyzing: '🧠 AI正在分析中，请稍候...',
-      note: '💡 正在进行风险评估和生存分析，这可能需要30-60秒时间...'
+      note: '💡 正在进行风险评估和生存分析，这可能需要30-60秒时间...',
+      completed: '🎉 综合分析完成！'
     },
     results: {
       title: '🎯 预测结果',
@@ -251,6 +284,37 @@ export const translations = {
       trendAnalysis: '趋势分析',
       trendChart: '健康数据趋势分析',
       recordsCount: '记录'
+    },
+    errors: {
+      serverConnection: '无法连接到服务器，请确保后端服务正在运行',
+      networkError: '🔌 网络连接错误：无法连接到服务器',
+      predictionFailed: '预测失败，请稍后重试',
+      requestTimeout: '🕐 请求超时：AI分析时间过长，请稍后重试',
+      tooManyRequests: '⏳ 请求过于频繁，请稍后再试',
+      authenticationFailed: '🔐 认证失效，请重新登录',
+      loginFailed: '登录失败',
+      registrationFailed: '注册失败',
+      fetchHistoryFailed: '获取历史记录失败',
+      deleteRecordsFailed: '删除记录失败',
+      connectionTestFailed: '连接测试失败'
+    },
+    success: {
+      apiConnectionSuccess: 'API连接测试成功！',
+      loginSuccess: '登录成功！',
+      registrationSuccess: '注册成功！',
+      logoutSuccess: '已安全登出',
+      recordsDeletedSuccess: '已成功删除选中的记录'
+    },
+    confirmations: {
+      deleteRecords: '确定要删除选中的记录吗？',
+      emptyFieldsWarning: '以下字段为空：\n{fields}\n\n这可能会影响预测准确性。是否继续？'
+    },
+    fields: {
+      totalCholesterol: '总胆固醇',
+      systolicBP: '收缩压', 
+      diastolicBP: '舒张压',
+      heartRate: '心率',
+      fastingGlucose: '空腹血糖'
     }
   }
 }; 

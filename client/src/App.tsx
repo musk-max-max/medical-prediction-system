@@ -227,9 +227,9 @@ const App: React.FC = () => {
         console.log('API连接成功:', response.data);
       } catch (error: any) {
         console.error('API连接失败:', error);
-        if (error.code === 'ERR_NETWORK') {
-          setError('无法连接到服务器，请确保后端服务正在运行');
-        }
+              if (error.code === 'ERR_NETWORK') {
+        setError(t.errors.serverConnection);
+      }
       }
     };
 
@@ -251,12 +251,12 @@ const App: React.FC = () => {
       console.log('手动测试API连接...');
       const response = await axios.get('/health');
       console.log('API连接成功:', response.data);
-      setSuccess('API连接测试成功！');
+      setSuccess(t.success.apiConnectionSuccess);
     } catch (error: any) {
       console.error('API连接失败:', error);
       const errorMessage = error.code === 'ERR_NETWORK' 
-        ? '网络连接错误：无法连接到后端服务器' 
-        : error.message || '连接测试失败';
+        ? t.errors.networkError 
+        : error.message || t.errors.connectionTestFailed;
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -295,9 +295,9 @@ const App: React.FC = () => {
       setIsAdmin(authData.user.is_admin);
       axios.defaults.headers.common['Authorization'] = `Bearer ${authData.token}`;
       setCurrentView('prediction');
-      setSuccess(language === 'en' ? 'Login successful!' : '登录成功！');
+      setSuccess(t.success.loginSuccess);
     } catch (error: any) {
-      setError(error.response?.data?.error || '登录失败');
+      setError(error.response?.data?.error || t.errors.loginFailed);
     } finally {
       setLoading(false);
     }
@@ -322,9 +322,9 @@ const App: React.FC = () => {
       localStorage.setItem('user', JSON.stringify(authData.user));
       axios.defaults.headers.common['Authorization'] = `Bearer ${authData.token}`;
       setCurrentView('prediction');
-      setSuccess(language === 'en' ? 'Registration successful!' : '注册成功！');
+      setSuccess(t.success.registrationSuccess);
     } catch (error: any) {
-      setError(error.response?.data?.error || '注册失败');
+      setError(error.response?.data?.error || t.errors.registrationFailed);
     } finally {
       setLoading(false);
     }
@@ -339,29 +339,29 @@ const App: React.FC = () => {
     setCurrentView('login');
     setPredictionResult(null);
     setSurvivalResult(null);
-    setSuccess(language === 'en' ? 'Logged out successfully' : '已安全登出');
+    setSuccess(t.success.logoutSuccess);
   };
 
   // 检查是否有空值
   const checkEmptyValues = () => {
     const emptyFields = [];
     if (healthForm.totchol === undefined) {
-      emptyFields.push(language === 'en' ? 'Total Cholesterol' : '总胆固醇');
+      emptyFields.push(t.fields.totalCholesterol);
     }
     if (healthForm.sysbp === undefined) {
-      emptyFields.push(language === 'en' ? 'Systolic Blood Pressure' : '收缩压');
+      emptyFields.push(t.fields.systolicBP);
     }
     if (healthForm.diabp === undefined) {
-      emptyFields.push(language === 'en' ? 'Diastolic Blood Pressure' : '舒张压');
+      emptyFields.push(t.fields.diastolicBP);
     }
     if (healthForm.bmi === undefined) {
       emptyFields.push('BMI');
     }
     if (healthForm.heartrte === undefined) {
-      emptyFields.push(language === 'en' ? 'Heart Rate' : '心率');
+      emptyFields.push(t.fields.heartRate);
     }
     if (healthForm.glucose === undefined) {
-      emptyFields.push(language === 'en' ? 'Fasting Glucose' : '空腹血糖');
+      emptyFields.push(t.fields.fastingGlucose);
     }
     return emptyFields;
   };
@@ -375,9 +375,7 @@ const App: React.FC = () => {
     // 检查空值
     const emptyFields = checkEmptyValues();
     if (emptyFields.length > 0) {
-      const confirmMessage = language === 'en' 
-        ? `The following fields are empty:\n${emptyFields.map(field => `• ${field}`).join('\n')}\n\nThis may affect prediction accuracy. Continue?`
-        : `以下字段为空：\n${emptyFields.map(field => `• ${field}`).join('\n')}\n\n这可能会影响预测准确性。是否继续？`;
+      const confirmMessage = t.confirmations.emptyFieldsWarning.replace('{fields}', emptyFields.map(field => `• ${field}`).join('\n'));
       
       if (!window.confirm(confirmMessage)) {
         setLoading(false);
@@ -418,19 +416,19 @@ const App: React.FC = () => {
 
       setPredictionResult(riskResponse.data);
       setSurvivalResult(survivalResponse.data);
-      setSuccess('🎉 综合分析完成！');
+      setSuccess(t.prediction.completed);
     } catch (error: any) {
       console.error('预测错误详情:', error);
       console.error('错误响应数据:', error.response?.data);
       console.error('错误状态码:', error.response?.status);
       console.error('错误消息:', error.message);
       
-      let errorMessage = '预测失败，请稍后重试';
+      let errorMessage = t.errors.predictionFailed;
       
       if (error.code === 'ECONNABORTED') {
-        errorMessage = '🕐 请求超时：AI分析时间过长，请稍后重试';
+        errorMessage = t.errors.requestTimeout;
       } else if (error.code === 'ERR_NETWORK') {
-        errorMessage = '🔌 网络连接错误：无法连接到服务器';
+        errorMessage = t.errors.networkError;
       } else if (error.response?.status === 429) {
         errorMessage = '⏳ 请求过于频繁，请稍后再试';
       } else if (error.response?.status === 401) {
@@ -462,9 +460,7 @@ const App: React.FC = () => {
       console.log('First record:', response.data.data?.[0]);
       setHistory(response.data.data || []);
     } catch (error: any) {
-      setError(language === 'en' ? 
-        'Failed to fetch history records' : 
-        '获取历史记录失败');
+      setError(t.errors.fetchHistoryFailed);
     } finally {
       setLoading(false);
     }
@@ -515,10 +511,10 @@ const App: React.FC = () => {
   // 风险等级文本
   const getRiskText = (level: string) => {
     switch (level) {
-      case 'low': return '低风险';
-      case 'medium': return '中等风险';
-      case 'high': return '高风险';
-      default: return '未知';
+      case 'low': return language === 'en' ? 'Low Risk' : '低风险';
+      case 'medium': return language === 'en' ? 'Medium Risk' : '中等风险';
+      case 'high': return language === 'en' ? 'High Risk' : '高风险';
+      default: return language === 'en' ? 'Unknown' : '未知';
     }
   };
 
@@ -550,9 +546,7 @@ const App: React.FC = () => {
 
   // 删除选中的记录
   const deleteSelectedRecords = async () => {
-    if (!window.confirm(language === 'en' ? 
-      'Are you sure you want to delete the selected records?' : 
-      '确定要删除选中的记录吗？')) {
+    if (!window.confirm(t.confirmations.deleteRecords)) {
       return;
     }
 
@@ -561,17 +555,13 @@ const App: React.FC = () => {
       await axios.delete('/predict/history', {
         data: { ids: selectedRecords }
       });
-      setSuccess(language === 'en' ? 
-        'Selected records deleted successfully' : 
-        '已成功删除选中的记录');
+      setSuccess(t.success.recordsDeletedSuccess);
       setSelectedRecords([]);
       setSelectAll(false);
       // 立即重新加载历史记录
       await fetchHistory();
     } catch (error: any) {
-      setError(language === 'en' ? 
-        'Failed to delete records' : 
-        '删除记录失败');
+      setError(t.errors.deleteRecordsFailed);
     } finally {
       setLoading(false);
     }
