@@ -32,4 +32,48 @@ router.get('/health', (req, res) => {
   });
 });
 
+// 临时测试端点 - 检查Cox文件
+router.get('/test-cox-files', (req, res) => {
+  const { spawn } = require('child_process');
+  const path = require('path');
+  
+  const pythonScript = path.resolve(__dirname, '../../ml_analysis/test_cox_files.py');
+  const pythonProcess = spawn('python3', [pythonScript], {
+    cwd: path.resolve(__dirname, '../../ml_analysis')
+  });
+
+  let stdout = '';
+  let stderr = '';
+
+  pythonProcess.stdout.on('data', (data) => {
+    stdout += data.toString();
+  });
+
+  pythonProcess.stderr.on('data', (data) => {
+    stderr += data.toString();
+  });
+
+  pythonProcess.on('close', (code) => {
+    if (code !== 0) {
+      return res.status(500).json({
+        success: false,
+        error: stderr,
+        code: code
+      });
+    }
+
+    try {
+      const result = JSON.parse(stdout);
+      res.json(result);
+    } catch (e) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to parse output',
+        stdout: stdout,
+        stderr: stderr
+      });
+    }
+  });
+});
+
 export default router; 
