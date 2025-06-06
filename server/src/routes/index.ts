@@ -38,7 +38,7 @@ router.get('/test-cox-files', (req, res) => {
   const path = require('path');
   
   const pythonScript = path.resolve(__dirname, '../../ml_analysis/test_cox_files.py');
-  const pythonProcess = spawn('python3', [pythonScript], {
+  const pythonProcess = spawn('python', [pythonScript], {
     cwd: path.resolve(__dirname, '../../ml_analysis')
   });
 

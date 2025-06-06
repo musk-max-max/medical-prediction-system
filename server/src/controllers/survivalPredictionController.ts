@@ -66,7 +66,7 @@ export const predictSurvivalTimes = async (req: Request, res: Response) => {
     console.log('🐍 调用Cox生存分析脚本:', pythonScript);
     console.log('📝 输入数据:', inputData);
 
-    const pythonProcess = spawn('python3', [pythonScript, inputData], {
+    const pythonProcess = spawn('python', [pythonScript, inputData], {
       cwd: path.resolve(__dirname, '../../../ml_analysis'),
       stdio: ['pipe', 'pipe', 'pipe']
     });

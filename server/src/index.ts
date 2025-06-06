@@ -10,6 +10,9 @@ import path from 'path';
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// 设置trust proxy以支持Render等云服务
+app.set('trust proxy', 1);
+
 // 创建管理员账户
 const createAdminUser = () => {
   const db = database.getDatabase();
