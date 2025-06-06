@@ -1,299 +1,242 @@
 #!/usr/bin/env python3
 """
-生存分析推理脚本 - 使用预训练模型
-加载已训练好的Framingham模型进行疾病风险预测
+弗雷明汉心脏研究多疾病生存分析推理脚本
+用于后端API的患者风险评估和生存分析
 """
 
 import pandas as pd
 import numpy as np
+import joblib
 import json
 import sys
 import os
 import warnings
-from sklearn.preprocessing import StandardScaler
-import joblib
-import pickle
-
 warnings.filterwarnings('ignore')
 
 def log_message(message):
     """将调试信息输出到stderr"""
     print(message, file=sys.stderr, flush=True)
 
-class FraminghamPredictor:
-    def __init__(self):
-        self.models = {}
-        self.scalers = {}
-        self.imputers = {}
-        self.feature_names = None
-        
-        # 疾病映射
-        self.diseases = [
-            'cvd', 'chd', 'stroke', 'mi', 
-            'angina', 'hypertension', 'death'
-        ]
-        
-        # 疾病中文名称映射
-        self.disease_names = {
-            'cvd': '心血管疾病',
-            'chd': '冠心病', 
-            'stroke': '脑卒中',
-            'mi': '心肌梗死',
-            'angina': '心绞痛',
-            'hypertension': '高血压',
-            'death': '死亡风险'
-        }
-
-    def load_models(self, model_dir='.'):
-        """加载所有预训练模型"""
-        log_message("Loading pretrained models...")
-        
+def load_framingham_models():
+    """加载Framingham模型"""
+    models = {}
+    diseases = ['cvd', 'chd', 'stroke', 'angina', 'mi', 'hypertension', 'death']
+    
+    log_message("Loading Framingham multi-disease models...")
+    
+    # 尝试从当前目录加载
+    model_dir = '.'
+    if not os.path.exists('framingham_cvd_model.pkl'):
+        # 如果当前目录没有，尝试上级目录
+        model_dir = '..'
+    
+    for disease_id in diseases:
         try:
-            # 加载特征名称
-            feature_path = os.path.join(model_dir, 'feature_names.pkl')
-            if os.path.exists(feature_path):
-                with open(feature_path, 'rb') as f:
-                    self.feature_names = pickle.load(f)
-                log_message(f"Feature names loaded: {len(self.feature_names)} features")
+            model_path = os.path.join(model_dir, f'framingham_{disease_id}_model.pkl')
+            scaler_path = os.path.join(model_dir, f'framingham_{disease_id}_scaler.pkl')
+            imputer_path = os.path.join(model_dir, f'framingham_{disease_id}_imputer.pkl')
             
-            # 加载每种疾病的模型
-            loaded_count = 0
-            for disease in self.diseases:
-                try:
-                    # 模型文件路径
-                    model_path = os.path.join(model_dir, f'framingham_{disease}_model.pkl')
-                    scaler_path = os.path.join(model_dir, f'framingham_{disease}_scaler.pkl')
-                    imputer_path = os.path.join(model_dir, f'framingham_{disease}_imputer.pkl')
-                    
-                    # 检查文件是否存在
-                    if all(os.path.exists(p) for p in [model_path, scaler_path, imputer_path]):
-                        # 加载模型
-                        self.models[disease] = joblib.load(model_path)
-                        self.scalers[disease] = joblib.load(scaler_path)
-                        self.imputers[disease] = joblib.load(imputer_path)
-                        
-                        log_message(f"{self.disease_names[disease]} model loaded successfully")
-                        loaded_count += 1
-                    else:
-                        log_message(f"{disease} model files missing")
-                        
-                except Exception as e:
-                    log_message(f"{disease} model loading failed: {e}")
-                    continue
-            
-            log_message(f"Total loaded {loaded_count}/{len(self.diseases)} models")
-            return loaded_count > 0
-            
-        except Exception as e:
-            log_message(f"Model loading failed: {e}")
-            return False
-
-    def preprocess_input(self, patient_data):
-        """预处理输入数据"""
-        log_message(f"Input data: {patient_data}")
-        
-        # 使用基础的18个特征，而不是扩展的22个特征
-        # 这些是所有模型训练时使用的基本特征
-        features = [
-            'SEX', 'AGE', 'TOTCHOL', 'SYSBP', 'DIABP', 'CURSMOKE', 
-            'CIGPDAY', 'BMI', 'DIABETES', 'BPMEDS', 'HEARTRTE', 'GLUCOSE',
-            'PREVCHD', 'PREVAP', 'PREVMI', 'PREVSTRK', 'PREVHYP', 'PULSE_PRESSURE'
-        ]
-        
-        log_message(f"Using 18 core features (models expect this): {features}")
-        
-        # 创建特征向量
-        feature_vector = []
-        for feature in features:
-            value = None
-            
-            # 尝试多种键名格式
-            for key_format in [feature.upper(), feature.lower(), feature]:
-                if key_format in patient_data:
-                    value = patient_data[key_format]
-                    break
-            
-            # 如果还没找到，尝试映射
-            if value is None:
-                mapping = {
-                    'SEX': 'sex', 'AGE': 'age', 'TOTCHOL': 'totchol',
-                    'SYSBP': 'sysbp', 'DIABP': 'diabp', 'CURSMOKE': 'cursmoke',
-                    'CIGPDAY': 'cigpday', 'BMI': 'bmi', 'DIABETES': 'diabetes',
-                    'BPMEDS': 'bpmeds', 'HEARTRTE': 'heartrte', 'GLUCOSE': 'glucose'
+            if all(os.path.exists(p) for p in [model_path, scaler_path, imputer_path]):
+                models[disease_id] = {
+                    'model': joblib.load(model_path),
+                    'scaler': joblib.load(scaler_path),
+                    'imputer': joblib.load(imputer_path)
                 }
-                mapped_key = mapping.get(feature.upper())
-                if mapped_key and mapped_key in patient_data:
-                    value = patient_data[mapped_key]
-            
-            # 使用默认值（包括计算特征的默认值）
-            if value is None:
-                default_values = {
-                    'SEX': 1, 'AGE': 50, 'TOTCHOL': 200, 'SYSBP': 120, 'DIABP': 80,
-                    'CURSMOKE': 0, 'CIGPDAY': 0, 'BMI': 25, 'DIABETES': 0,
-                    'BPMEDS': 0, 'HEARTRTE': 70, 'GLUCOSE': 90,
-                    'PREVCHD': 0, 'PREVAP': 0, 'PREVMI': 0, 'PREVSTRK': 0, 'PREVHYP': 0,
-                    'PULSE_PRESSURE': 0  # 会在下面计算
-                }
-                value = default_values.get(feature.upper(), 0)
-                
-                # 计算脉压
-                if feature == 'PULSE_PRESSURE':
-                    sysbp = patient_data.get('sysbp', 120)
-                    diabp = patient_data.get('diabp', 80)
-                    value = float(sysbp) - float(diabp)
-            
-            feature_vector.append(float(value))
-            log_message(f"   {feature}: {value}")
-        
-        result = np.array(feature_vector).reshape(1, -1)
-        log_message(f"Feature vector shape: {result.shape}")
-        return result
-
-    def predict_single_disease(self, patient_data, disease):
-        """预测单个疾病的风险"""
-        if disease not in self.models:
-            return None
-        
-        try:
-            # 预处理数据
-            X = self.preprocess_input(patient_data)
-            
-            # 数据填充
-            if disease in self.imputers:
-                X = self.imputers[disease].transform(X)
-            
-            # 数据缩放
-            if disease in self.scalers:
-                X = self.scalers[disease].transform(X)
-            
-            # 预测
-            model = self.models[disease]
-            
-            # 获取预测概率
-            if hasattr(model, 'predict_proba'):
-                proba = model.predict_proba(X)[0]
-                risk_prob = proba[1] if len(proba) > 1 else proba[0]
+                log_message(f"✓ {disease_id.upper()} model loaded")
             else:
-                # 如果是回归模型
-                risk_prob = float(model.predict(X)[0])
-                risk_prob = max(0, min(1, risk_prob))  # 限制在0-1之间
+                log_message(f"✗ {disease_id.upper()} model files missing")
+                
+        except Exception as e:
+            log_message(f"✗ {disease_id.upper()} model loading failed: {e}")
+    
+    # 加载特征列表
+    features_path = os.path.join(model_dir, 'framingham_multi_disease_features.json')
+    if os.path.exists(features_path):
+        with open(features_path, 'r') as f:
+            feature_names = json.load(f)
+    else:
+        # 默认特征顺序
+        feature_names = [
+            "SEX", "AGE", "TOTCHOL", "SYSBP", "DIABP", "CURSMOKE",
+            "CIGPDAY", "BMI", "DIABETES", "BPMEDS", "HEARTRTE", "GLUCOSE",
+            "PULSE_PRESSURE", "CHOL_AGE_RATIO", "AGE_GROUP", 
+            "HYPERTENSION_STAGE", "SMOKING_RISK", "BMI_CATEGORY"
+        ]
+    
+    return models, feature_names
+
+def prepare_patient_features(patient_data, feature_names):
+    """准备患者特征数据"""
+    log_message(f"Preparing features for patient: {patient_data}")
+    
+    # 标准化输入数据键名为大写
+    normalized_data = {}
+    for key, value in patient_data.items():
+        normalized_data[key.upper()] = value
+    
+    # 创建特征DataFrame
+    features = pd.DataFrame([normalized_data])
+    
+    # 特征工程
+    features['PULSE_PRESSURE'] = features['SYSBP'] - features['DIABP']
+    features['CHOL_AGE_RATIO'] = features['TOTCHOL'] / (features['AGE'] + 1)
+    features['AGE_GROUP'] = pd.cut(features['AGE'], bins=[0, 45, 55, 65, 100], labels=[0, 1, 2, 3]).astype(float)
+    
+    # 高血压分期
+    features['HYPERTENSION_STAGE'] = 0
+    features.loc[(features['SYSBP'] >= 130) | (features['DIABP'] >= 80), 'HYPERTENSION_STAGE'] = 1
+    features.loc[(features['SYSBP'] >= 140) | (features['DIABP'] >= 90), 'HYPERTENSION_STAGE'] = 2
+    
+    # 吸烟风险
+    features['SMOKING_RISK'] = features['CURSMOKE'] * (1 + features['CIGPDAY'].fillna(0) / 20)
+    
+    # BMI分类
+    features['BMI_CATEGORY'] = 0
+    features.loc[features['BMI'] < 18.5, 'BMI_CATEGORY'] = 1
+    features.loc[features['BMI'] >= 25, 'BMI_CATEGORY'] = 2
+    features.loc[features['BMI'] >= 30, 'BMI_CATEGORY'] = 3
+    
+    # 确保特征顺序与训练时一致
+    features = features[feature_names]
+    
+    log_message(f"Feature vector prepared with shape: {features.shape}")
+    return features
+
+def predict_disease_risk(patient_data, models, feature_names):
+    """预测所有疾病风险"""
+    log_message("Starting multi-disease risk prediction...")
+    
+    # 准备特征
+    features = prepare_patient_features(patient_data, feature_names)
+    
+    # 疾病名称映射
+    disease_names = {
+        'cvd': 'CVD',
+        'chd': 'CHD', 
+        'stroke': 'STROKE',
+        'angina': 'ANGINA',
+        'mi': 'MI',
+        'hypertension': 'HYPERTENSION',
+        'death': 'DEATH'
+    }
+    
+    predictions = {}
+    
+    for disease_id, model_data in models.items():
+        try:
+            log_message(f"Predicting {disease_id.upper()}...")
             
-            return risk_prob
+            # 处理缺失值
+            X_imputed = model_data['imputer'].transform(features)
+            X_imputed = pd.DataFrame(X_imputed, columns=features.columns)
+            
+            # 标准化
+            X_scaled = model_data['scaler'].transform(X_imputed)
+            
+            # 预测概率
+            risk_prob = model_data['model'].predict_proba(X_scaled)[0, 1]
+            
+            # 计算生存指标
+            base_time = 25  # 基础预期时间25年
+            risk_adjusted_time = base_time * (1 - risk_prob * 0.8)
+            expected_time = max(risk_adjusted_time, 1)
+            
+            # 计算不同时间点的生存概率
+            survival_probabilities = []
+            for years in [1, 5, 10, 20]:
+                hazard_rate = -np.log(1 - risk_prob) / base_time if risk_prob < 0.99 else 0.1
+                survival_prob = np.exp(-hazard_rate * years)
+                survival_prob = max(0.01, min(0.99, survival_prob))
+                
+                survival_probabilities.append({
+                    'years': years,
+                    'survival_probability': float(survival_prob),
+                    'event_probability': float(1 - survival_prob)
+                })
+            
+            # 存储结果
+            result = {
+                'risk_score': float(risk_prob),
+                'expected_time_years': float(expected_time),
+                'median_time_years': float(expected_time * 0.693),
+                'survival_probabilities': survival_probabilities,
+                'model_quality': 0.85,  # Framingham模型质量
+                'baseline_event_rate': float(risk_prob)
+            }
+            
+            predictions[disease_names[disease_id]] = result
+            log_message(f"✓ {disease_id.upper()} prediction completed (risk: {risk_prob:.3f})")
             
         except Exception as e:
-            log_message(f"{disease} prediction failed: {e}")
-            return None
-
-    def calculate_survival_metrics(self, risk_prob):
-        """基于风险概率计算生存相关指标"""
-        # 风险越高，预期发病时间越短
-        base_time = 25  # 基础预期时间25年
-        risk_adjusted_time = base_time * (1 - risk_prob * 0.8)  # 最高风险减少80%时间
-        expected_time = max(risk_adjusted_time, 1)  # 最少1年
-        
-        # 计算不同时间点的生存概率
-        survival_probabilities = []
-        for years in [1, 5, 10, 20]:
-            # 简化的生存概率模型：假设恒定风险率
-            hazard_rate = -np.log(1 - risk_prob) / base_time if risk_prob < 0.99 else 0.1
-            survival_prob = np.exp(-hazard_rate * years)
-            
-            survival_probabilities.append({
-                'years': years,
-                'survival_probability': float(max(0.01, min(0.99, survival_prob))),
-                'event_probability': float(max(0.01, min(0.99, 1 - survival_prob)))
-            })
-        
-        return {
-            'risk_score': float(risk_prob),
-            'expected_time_years': float(expected_time),
-            'median_time_years': float(expected_time * 0.693),  # ln(2) ≈ 0.693
-            'survival_probabilities': survival_probabilities,
-            'model_quality': 0.85,  # 训练模型的质量更高
-            'baseline_event_rate': float(risk_prob)
-        }
-
-    def predict_all_diseases(self, patient_data):
-        """预测所有疾病的风险"""
-        log_message("Starting disease risk prediction...")
-        
-        predictions = {}
-        
-        for disease in self.diseases:
-            if disease in self.models:
-                log_message(f"   Predicting {self.disease_names[disease]}...")
-                
-                risk_prob = self.predict_single_disease(patient_data, disease)
-                
-                if risk_prob is not None:
-                    # 计算生存相关指标
-                    survival_metrics = self.calculate_survival_metrics(risk_prob)
-                    
-                    # 将疾病名称转换为大写（与前端期望的格式一致）
-                    disease_key = disease.upper()
-                    predictions[disease_key] = survival_metrics
-                    
-                    log_message(f"     Risk probability: {risk_prob:.3f}, Expected time: {survival_metrics['expected_time_years']:.1f}years")
-                else:
-                    log_message(f"     Prediction failed")
-        
-        return predictions
-
-    def run_prediction(self, patient_data):
-        """运行完整的预测流程"""
-        # 加载模型
-        if not self.load_models():
-            return {
-                'success': False,
-                'error': 'Unable to load pretrained models'
-            }
-        
-        # 进行预测
-        predictions = self.predict_all_diseases(patient_data)
-        
-        if not predictions:
-            return {
-                'success': False,
-                'error': 'All disease predictions failed'
-            }
-        
-        return {
-            'success': True,
-            'survival_predictions': predictions,
-            'metadata': {
-                'timestamp': pd.Timestamp.now().isoformat(),
-                'model_type': 'framingham_pretrained',
-                'input_features': len(self.feature_names) if self.feature_names else 12,
-                'diseases_predicted': len(predictions)
-            }
-        }
+            log_message(f"✗ {disease_id.upper()} prediction failed: {e}")
+    
+    return predictions
 
 def main():
-    if len(sys.argv) < 2:
+    """主函数"""
+    if len(sys.argv) != 2:
         print(json.dumps({
-            "success": False,
-            "error": "Usage: python survival_inference.py <patient_data_json>"
+            'success': False,
+            'error': 'Patient data JSON required'
         }))
-        return
+        sys.exit(1)
     
     try:
-        # 解析患者数据
+        # 解析输入数据
         patient_data = json.loads(sys.argv[1])
+        log_message(f"Received patient data: {patient_data}")
         
-        # 创建预测器
-        predictor = FraminghamPredictor()
+        # 加载模型
+        models, feature_names = load_framingham_models()
         
-        # 运行预测
-        result = predictor.run_prediction(patient_data)
+        if not models:
+            result = {
+                'success': False,
+                'error': 'Unable to load any disease prediction models'
+            }
+        else:
+            # 进行预测
+            predictions = predict_disease_risk(patient_data, models, feature_names)
+            
+            if predictions:
+                result = {
+                    'success': True,
+                    'survival_predictions': predictions,
+                    'metadata': {
+                        'timestamp': pd.Timestamp.now().isoformat(),
+                        'model_type': 'framingham_multi_disease',
+                        'diseases_predicted': len(predictions),
+                        'model_details': {
+                            'type': 'Framingham pretrained models',
+                            'features': len(feature_names),
+                            'study_period': '24 years',
+                            'patient_count': 4434
+                        }
+                    }
+                }
+                log_message(f"Prediction completed successfully for {len(predictions)} diseases")
+            else:
+                result = {
+                    'success': False,
+                    'error': 'All disease predictions failed'
+                }
         
-        # 输出结果到stdout（只有JSON）
+        # 输出结果到stdout
         print(json.dumps(result, ensure_ascii=False, indent=2))
         
-    except Exception as e:
+    except json.JSONDecodeError:
         print(json.dumps({
-            "success": False,
-            "error": f"Survival analysis failed: {str(e)}"
+            'success': False,
+            'error': 'Invalid JSON format in patient data'
         }))
+        sys.exit(1)
+    except Exception as e:
+        log_message(f"Main function error: {e}")
+        print(json.dumps({
+            'success': False,
+            'error': f'Survival analysis failed: {str(e)}'
+        }))
+        sys.exit(1)
 
 if __name__ == "__main__":
     main() 
